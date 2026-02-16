@@ -2,10 +2,10 @@ provider "aws" {
   region = var.aws_region
 
   default_tags {
-   tags = {
-     Environment = "Production"
-     Owner       = "Ortiz"
-     ManagedBy = "Terraform"
-   }
- }
+    tags = {
+      Environment = "Production"
+      Owner       = "Ortiz"
+      ManagedBy   = "Terraform"
+    }
+  }
 }
