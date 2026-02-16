@@ -1,4 +1,4 @@
-# 1. Criação do Log Group obrigatório para o serviço
+# 2. Criação do Log Group obrigatório para o serviço
 resource "aws_cloudwatch_log_group" "this" {
   name              = "/ecs/${var.cluster_name}/${var.service_name}"
   retention_in_days = var.log_retention_in_days
@@ -16,21 +16,21 @@ resource "aws_ecs_task_definition" "this" {
 
   container_definitions = jsonencode([
     {
-      name      = var.container_name
+      name      = "${var.project_name}-${var.environment}-container"
       image     = var.container_image
       cpu       = tonumber(var.task_cpu)
       memory    = tonumber(var.task_memory)
       essential = true
-      
+
       portMappings = [
         {
           containerPort = var.container_port
           protocol      = "tcp"
         }
       ]
-      
-      # Aqui injetamos os ARNs do Secrets Manager
-      secrets = var.secrets
+
+      # Aqui injetamos os ARNs do Secrets Manager automaticamente
+      secrets = local.secrets
 
       logConfiguration = {
         logDriver = "awslogs"
@@ -42,9 +42,58 @@ resource "aws_ecs_task_definition" "this" {
       }
     }
   ])
+
+  tags = {
+    Application = var.application_tag
+    CostCenter  = var.cost_center
+  }
 }
 
-# 3. Criação do Serviço ECS
+# 3. Criação do Target Group (Condicional)
+resource "aws_lb_target_group" "this" {
+  # Só cria se a variável for true
+  count = var.create_target_group ? 1 : 0
+
+  name        = "${var.service_name}-tg"
+  port        = var.container_port
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    path                = var.health_check_path
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200-499"
+  }
+
+  tags = {
+    Application = var.application_tag
+    CostCenter  = var.cost_center
+  }
+}
+
+# 3.1. Criação da Listener Rule (vincula Target Group ao ALB)
+resource "aws_lb_listener_rule" "this" {
+  count        = var.create_target_group ? 1 : 0
+  listener_arn = var.alb_listener_arn
+  priority     = var.alb_priority
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.this[0].arn
+  }
+
+  condition {
+    host_header {
+      values = [var.host_header]
+    }
+  }
+}
+
+# 4. Criação do Serviço ECS
 resource "aws_ecs_service" "this" {
   name            = var.service_name
   cluster         = var.cluster_id
@@ -57,14 +106,20 @@ resource "aws_ecs_service" "this" {
     security_groups = var.security_groups
   }
 
-  # Agora verificamos se a string de target_group_arn não está vazia
+  # O bloco dynamic agora avalia a variável booleana
   dynamic "load_balancer" {
-    for_each = var.target_group_arn != "" ? [1] : []
+    for_each = var.create_target_group ? [1] : []
     content {
-      target_group_arn = var.target_group_arn
-      container_name   = var.container_name
+      # Apontamos para o ARN do Target Group criado acima (índice 0 pois usamos count)
+      target_group_arn = aws_lb_target_group.this[0].arn
+      container_name   = "${var.project_name}-${var.environment}-container"
       container_port   = var.container_port
     }
+  }
+
+  tags = {
+    Application = var.application_tag
+    CostCenter  = var.cost_center
   }
 
   lifecycle {

@@ -1,3 +1,13 @@
+variable "project_name" {
+  type        = string
+  description = "Nome do projeto"
+}
+
+variable "environment" {
+  type        = string
+  description = "Ambiente de deploy"
+}
+
 variable "service_name" {
   type = string
 }
@@ -15,25 +25,26 @@ variable "container_image" {
 }
 
 variable "task_cpu" {
-  type    = string
+  type = string
 }
 
 variable "task_memory" {
-  type    = string
+  type = string
 }
 
 variable "container_port" {
-  type    = number
+  type = number
 }
 
-variable "secrets" {
-  type = string
-  description = "Variavel para o secrets manager"
+variable "secrets_arn" {
+  type        = string
+  description = "ARN do secret no Secrets Manager"
+  default     = ""
 }
 
 # --- Observabilidade ---
 variable "log_retention_in_days" {
-  type    = number
+  type = number
 }
 
 # --- IAM Roles (Serão passadas via módulo externo) ---
@@ -46,7 +57,7 @@ variable "task_role_arn" {
 
 # --- Configurações de Rede e Escalonamento ---
 variable "desired_count" {
-  type    = number
+  type = number
 }
 variable "subnets" {
   type = list(string)
@@ -56,11 +67,47 @@ variable "security_groups" {
 }
 
 # --- Load Balancer (Opcional) ---
-variable "target_group_arn" {
-  type    = string
-  default = null
+variable "create_target_group" {
+  type        = bool
+  description = "Define se o serviço precisa de um Target Group (true para APIs, false para Workers)"
 }
-variable "container_name" {
+
+variable "vpc_id" {
   type        = string
-  description = "Nome do contentor (crucial para o mapeamento do Load Balancer)"
+  description = "ID da VPC (Obrigatório se create_target_group for true)"
+  default     = ""
+}
+
+variable "health_check_path" {
+  type        = string
+  description = "Caminho do health check da aplicação"
+  default     = "/"
+}
+
+variable "application_tag" {
+  type        = string
+  description = "Nome da aplicação para tag"
+}
+
+variable "cost_center" {
+  type        = string
+  description = "Centro de custo para tag"
+}
+
+variable "alb_listener_arn" {
+  type        = string
+  description = "ARN do listener HTTPS do ALB"
+  default     = ""
+}
+
+variable "alb_priority" {
+  type        = number
+  description = "Prioridade da regra no listener"
+  default     = null
+}
+
+variable "host_header" {
+  type        = string
+  description = "Domínio para roteamento no ALB"
+  default     = ""
 }
