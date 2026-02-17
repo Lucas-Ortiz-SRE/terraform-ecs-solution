@@ -300,20 +300,7 @@ Contribuições são bem-vindas. Por favor:
 4. Push para a branch
 5. Abra um Pull Request
 
-## Licença
-
-Este projeto está sob a licença MIT.
-
-## Suporte
-
-Para dúvidas ou problemas:
-
-- Abra uma issue no repositório
-- Consulte a documentação oficial da AWS
-- Revise os exemplos na pasta `examples/`
-
 ## Referências
 
 - [AWS ECS Documentation](https://docs.aws.amazon.com/ecs/)
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [AWS Fargate Pricing](https://aws.amazon.com/fargate/pricing/)
