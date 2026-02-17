@@ -122,6 +122,11 @@ resource "aws_ecs_service" "this" {
     security_groups = var.security_groups
   }
 
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
   # Vincula ao target group apenas se create_target_group = true
   dynamic "load_balancer" {
     for_each = var.create_target_group ? [1] : []
