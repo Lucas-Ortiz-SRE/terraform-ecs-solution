@@ -61,7 +61,7 @@ terraform-ecs-solution/
 
 ## Pré-requisitos
 
-- Terraform >= 1.0
+- Terraform >= 1.5.0
 - AWS CLI configurado com credenciais válidas
 - Certificado SSL/TLS no AWS Certificate Manager (ACM) para HTTPS
 - Imagens Docker publicadas no Amazon ECR (Elastic Container Registry)
