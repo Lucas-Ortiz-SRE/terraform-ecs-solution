@@ -1,3 +1,8 @@
+#=============================================================================================
+# APPLICATION LOAD BALANCER
+#=============================================================================================
+# Cria o Application Load Balancer (ALB) para distribuir tráfego entre os ECS services
+# Pode ser interno (apenas VPC) ou internet-facing (público)
 resource "aws_lb" "this" {
   name               = "${var.project_name}-${var.environment}-alb"
   internal           = var.alb_internal
@@ -13,6 +18,11 @@ resource "aws_lb" "this" {
   }
 }
 
+#=============================================================================================
+# HTTPS LISTENER
+#=============================================================================================
+# Listener HTTPS (porta 443) com certificado SSL/TLS
+# Ação padrão retorna 404 (services específicos criam suas próprias regras)
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.this.arn
   port              = "443"
@@ -30,6 +40,10 @@ resource "aws_lb_listener" "https" {
   }
 }
 
+#=============================================================================================
+# HTTP LISTENER (REDIRECT TO HTTPS)
+#=============================================================================================
+# Listener HTTP (porta 80) que redireciona todo tráfego para HTTPS (porta 443)
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.this.arn
   port              = "80"

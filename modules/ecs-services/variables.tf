@@ -18,7 +18,7 @@ variable "cluster_name" {
   type = string
 } # Necessário para compor o nome do Log Group
 
-# --- Configurações da Task e Contentor ---
+# --- Configurações da Task ---
 variable "container_image" {
   type        = string
   description = "A imagem Docker a ser utilizada (ex: ECR URL)"
@@ -47,7 +47,7 @@ variable "log_retention_in_days" {
   type = number
 }
 
-# --- IAM Roles (Serão passadas via módulo externo) ---
+# --- IAM Roles ---
 variable "execution_role_arn" {
   type = string
 }
@@ -55,7 +55,7 @@ variable "task_role_arn" {
   type = string
 }
 
-# --- Configurações de Rede e Escalonamento ---
+# --- Configurações de Redes ---
 variable "desired_count" {
   type = number
 }

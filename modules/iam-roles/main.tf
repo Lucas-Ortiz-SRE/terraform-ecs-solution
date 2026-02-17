@@ -1,4 +1,7 @@
-# ECS Task Execution Role - Usado pelo ECS Agent para pull de imagens e logs
+#=============================================================================================
+# ECS TASK EXECUTION ROLE
+#=============================================================================================
+# Role usada pelo ECS Agent para pull de imagens ECR, envio de logs e leitura de secrets
 resource "aws_iam_role" "ecs_execution_role" {
   name = "${var.project_name}-${var.environment}-${var.service_name}-execution-role"
 
@@ -16,12 +19,13 @@ resource "aws_iam_role" "ecs_execution_role" {
   })
 }
 
+# Anexa policy gerenciada da AWS para execução de tasks ECS
 resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
   role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Política adicional para Secrets Manager
+# Policy adicional para acessar Secrets Manager e descriptografar com KMS
 resource "aws_iam_role_policy" "ecs_execution_secrets" {
   name = "${var.project_name}-${var.environment}-${var.service_name}-secrets-policy"
   role = aws_iam_role.ecs_execution_role.id
@@ -41,7 +45,10 @@ resource "aws_iam_role_policy" "ecs_execution_secrets" {
   })
 }
 
-# ECS Task Role - Usado pela aplicação dentro do container
+#=============================================================================================
+# ECS TASK ROLE
+#=============================================================================================
+# Role usada pela aplicação dentro do container para acessar serviços AWS
 resource "aws_iam_role" "ecs_task_role" {
   name = "${var.project_name}-${var.environment}-${var.service_name}-task-role"
 
@@ -59,7 +66,7 @@ resource "aws_iam_role" "ecs_task_role" {
   })
 }
 
-# Políticas comuns para a task role
+# Políticas comuns para a aplicação (S3, SQS, SNS, DynamoDB)
 resource "aws_iam_role_policy" "ecs_task_policy" {
   name = "${var.project_name}-${var.environment}-${var.service_name}-task-policy"
   role = aws_iam_role.ecs_task_role.id

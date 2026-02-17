@@ -1,10 +1,16 @@
-# 2. Criação do Log Group obrigatório para o serviço
+#=============================================================================================
+# CLOUDWATCH LOG GROUP
+#=============================================================================================
+# Cria o log group no CloudWatch para armazenar logs do container ECS
 resource "aws_cloudwatch_log_group" "this" {
   name              = "/ecs/${var.cluster_name}/${var.service_name}"
   retention_in_days = var.log_retention_in_days
 }
 
-# 2. Criação da Task Definition
+#=============================================================================================
+# ECS TASK DEFINITION
+#=============================================================================================
+# Define a configuração da task (container, recursos, roles, logs, secrets)
 resource "aws_ecs_task_definition" "this" {
   family                   = var.service_name
   network_mode             = "awsvpc"
@@ -29,7 +35,7 @@ resource "aws_ecs_task_definition" "this" {
         }
       ]
 
-      # Aqui injetamos os ARNs do Secrets Manager automaticamente
+      # Secrets do Secrets Manager injetados automaticamente
       secrets = local.secrets
 
       logConfiguration = {
@@ -49,12 +55,15 @@ resource "aws_ecs_task_definition" "this" {
   }
 }
 
-# 3. Criação do Target Group (Condicional)
+#=============================================================================================
+# TARGET GROUP (CONDICIONAL)
+#=============================================================================================
+# Cria target group apenas se create_target_group = true (APIs/web)
+# Workers/cron jobs não precisam de target group
 resource "aws_lb_target_group" "this" {
-  # Só cria se a variável for true
   count = var.create_target_group ? 1 : 0
 
-  name        = "${var.service_name}-tg"
+  name        = "${var.environment}-${var.service_name}-tg"
   port        = var.container_port
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
@@ -75,7 +84,11 @@ resource "aws_lb_target_group" "this" {
   }
 }
 
-# 3.1. Criação da Listener Rule (vincula Target Group ao ALB)
+#=============================================================================================
+# LISTENER RULE (CONDICIONAL)
+#=============================================================================================
+# Cria regra no listener do ALB para rotear tráfego baseado no host header
+# Vincula o target group ao ALB HTTPS listener
 resource "aws_lb_listener_rule" "this" {
   count        = var.create_target_group ? 1 : 0
   listener_arn = var.alb_listener_arn
@@ -93,7 +106,10 @@ resource "aws_lb_listener_rule" "this" {
   }
 }
 
-# 4. Criação do Serviço ECS
+#=============================================================================================
+# ECS SERVICE
+#=============================================================================================
+# Cria o serviço ECS que gerencia as tasks (containers em execução)
 resource "aws_ecs_service" "this" {
   name            = var.service_name
   cluster         = var.cluster_id
@@ -106,11 +122,10 @@ resource "aws_ecs_service" "this" {
     security_groups = var.security_groups
   }
 
-  # O bloco dynamic agora avalia a variável booleana
+  # Vincula ao target group apenas se create_target_group = true
   dynamic "load_balancer" {
     for_each = var.create_target_group ? [1] : []
     content {
-      # Apontamos para o ARN do Target Group criado acima (índice 0 pois usamos count)
       target_group_arn = aws_lb_target_group.this[0].arn
       container_name   = "${var.project_name}-${var.environment}-container"
       container_port   = var.container_port
