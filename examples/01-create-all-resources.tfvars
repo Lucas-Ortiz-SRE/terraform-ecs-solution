@@ -92,15 +92,15 @@ ecs_services = {
   "api" = {
     container_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-api:latest"
     container_port  = 8080
-    task_cpu        = "512"
-    task_memory     = "1024"
-    desired_count   = 2
+    task_cpu        = "256"
+    task_memory     = "512"
+    desired_count   = 1
 
     subnets               = []
     create_security_group = true
     security_groups       = []
 
-    secrets_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-api-secrets-xxxxx"
+    secrets_arn = ""
 
     create_target_group = true
     health_check_path   = "/health"
@@ -110,7 +110,7 @@ ecs_services = {
     application_tag = "API Service"
     cost_center     = "Engineering"
 
-    log_retention_in_days = 7
+    log_retention_in_days = 1
   }
 
   "worker" = {
@@ -134,6 +134,6 @@ ecs_services = {
     application_tag = "Background Worker"
     cost_center     = "Engineering"
 
-    log_retention_in_days = 3
+    log_retention_in_days = 1
   }
 }
